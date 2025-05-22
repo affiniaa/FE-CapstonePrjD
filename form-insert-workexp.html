@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Profile Form</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .experience-entry {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      background-color: #f8f9fa;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-5">
+  <h2 class="mb-4">User Profile Form</h2>
+  <form id="userForm">
+    <!-- Basic Info -->
+    <div class="mb-3">
+      <label for="name" class="form-label">Nama</label>
+      <input type="text" class="form-control" id="name" name="name" required>
+    </div>
+    <div class="mb-3">
+      <label for="current_position" class="form-label">Current Position</label>
+      <input type="text" class="form-control" id="current_position" name="current_position" required>
+    </div>
+    <div class="mb-3">
+      <label for="about" class="form-label">About</label>
+      <textarea class="form-control" id="about" name="about" rows="3" required></textarea>
+    </div>
+
+    <!-- Experience Section -->
+    <h4>Data Experience</h4>
+    <div id="experienceContainer"></div>
+    <button type="button" class="btn btn-secondary mb-4" onclick="addExperience()">+ Tambah Pengalaman</button>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+
+  <!-- Output JSON -->
+  <div class="mt-5">
+    <h5>Submitted Data (JSON)</h5>
+    <pre id="result"></pre>
+  </div>
+</div>
+
+<script>
+  let experienceCount = 0;
+
+  function addExperience() {
+    const container = document.getElementById('experienceContainer');
+    const index = experienceCount++;
+
+    const section = document.createElement('div');
+    section.classList.add('experience-entry');
+    section.setAttribute('data-index', index);
+    section.innerHTML = `
+      <h5>Experience #${index + 1}</h5>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Work Exp ID</label>
+          <input type="text" name="work_exp_id_${index}" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Company</label>
+          <input type="text" name="company_${index}" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Work Position</label>
+          <input type="text" name="work_position_${index}" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Work Location</label>
+          <input type="text" name="work_location_${index}" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Start Year</label>
+          <input type="text" name="start_year_${index}" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">End Year</label>
+          <input type="text" name="end_year_${index}" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Icon Src</label>
+          <input type="text" name="img_icon_src_${index}" class="form-control" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Modal Src</label>
+          <input type="text" name="img_modal_src_${index}" class="form-control" required>
+        </div>
+        <div class="col-12">
+          <label class="form-label">Info</label>
+          <input type="text" name="info_${index}" class="form-control">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Work Responsibilities</label>
+          <div id="work_responsibilities_${index}">
+            <input type="text" name="responsibility_${index}[]" class="form-control mb-2" placeholder="Enter responsibility" required>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addResponsibility(${index})">+ Add Responsibility</button>
+        </div>
+        <div class="col-12">
+          <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeExperience(this)">Remove Experience</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(section);
+  }
+
+  function addResponsibility(index) {
+    const div = document.getElementById(`work_responsibilities_${index}`);
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = `responsibility_${index}[]`;
+    input.classList.add('form-control', 'mb-2');
+    input.placeholder = 'Enter responsibility';
+    div.appendChild(input);
+  }
+
+  function removeExperience(button) {
+    button.closest('.experience-entry').remove();
+  }
+
+  document.getElementById('userForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    const result = {
+      name: formData.get("name"),
+      current_position: formData.get("current_position"),
+      about: formData.get("about"),
+      data_experiences: []
+    };
+
+    document.querySelectorAll('.experience-entry').forEach(section => {
+      const index = section.getAttribute('data-index');
+      const responsibilities = Array.from(document.querySelectorAll(`[name="responsibility_${index}[]"]`))
+        .map(input => input.value);
+
+      result.data_experiences.push({
+        work_exp_id: formData.get(`work_exp_id_${index}`),
+        company: formData.get(`company_${index}`),
+        work_position: formData.get(`work_position_${index}`),
+        work_location: formData.get(`work_location_${index}`),
+        start_year: formData.get(`start_year_${index}`),
+        end_year: formData.get(`end_year_${index}`),
+        img_icon_src: formData.get(`img_icon_src_${index}`),
+        img_modal_src: formData.get(`img_modal_src_${index}`),
+        info: formData.get(`info_${index}`),
+        work_responsibilities: responsibilities
+      });
+    });
+
+    document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+  });
+
+  // Auto-add 1 experience on load
+  window.onload = addExperience;
+</script>
+</body>
+</html>
